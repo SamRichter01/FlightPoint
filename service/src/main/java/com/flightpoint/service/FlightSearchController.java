@@ -1,7 +1,5 @@
 package com.flightpoint.service;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 import org.springframework.web.bind.annotation.PostMapping;
 
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,10 +15,10 @@ public class FlightSearchController {
     public SearchOutput flightSearch(@RequestBody SearchInput searchInput) {
         
         //Extract data directly from searchInput object.
-        //Double deviceHeading = searchInput.deviceHeading;
-        //Double deviceLat = searchInput.deviceLat;
-        //Double deviceLng = searchInput.deviceLng;
-        //Double deviceAzimuth = searchInput.deviceAzimuth;
+        double deviceHeading = searchInput.deviceHeading();
+        double deviceLat = searchInput.deviceLat();
+        double deviceLng = searchInput.deviceLng();
+        double deviceAzimuth = searchInput.deviceAzimuth();
 
         //SearchOutput searchOutput = SearchUtils.search(deviceLat, deviceLng, deviceHeading);
     
