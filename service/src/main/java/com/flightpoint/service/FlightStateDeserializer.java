@@ -43,6 +43,8 @@ public class FlightStateDeserializer extends StdDeserializer<State> {
             int counter = 0;
             State state = new State("", "", "", 0, 0, 0, 0, 0, false, 0, 0, 0, new int[0], 0, "", false, 0, 0);
         
+            // Replace Reflect with Spring's PropertyAccessor as described below
+            //  https://stackoverflow.com/questions/10009052/invoking-setter-method-using-java-reflection
             if (node.isArray()) {
                 ArrayNode arrayNode = (ArrayNode) node;
                 Iterator<JsonNode> iterator = arrayNode.elements();

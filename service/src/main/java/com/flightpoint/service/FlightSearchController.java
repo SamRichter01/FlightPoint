@@ -19,12 +19,13 @@ public class FlightSearchController {
         //double deviceLat = searchInput.deviceLat();
         //double deviceLng = searchInput.deviceLng();
         //double deviceAzimuth = searchInput.deviceAzimuth();
+        //double deviceAlt = searchInpit.deviceAlt();
 
         //SearchOutput searchOutput = SearchUtils.search(deviceLat, deviceLng, deviceHeading);
         //lat = 44.9778;
         //lng = -93.2650;
 
-        SearchUtils.search(0, 0, 44.9778, -93.2650);
+        SearchUtils.search(0, 0, 44.9778, -93.2650, 0);
     
         return new SearchOutput();
     }

@@ -14,15 +14,28 @@ import org.springframework.web.client.RestClient;
 
 public class SearchUtils {
 
-    public static SearchOutput search(double hdng, double azmth, double lat, double lng) {
+    public static SearchOutput search(double hdng, double azmth, double lat, double lng, double alt) {
+        // Get bounding box
         BoundingBox searchBox = defineBoundingBox(hdng, azmth, lat, lng);
 
-        State[] states = getFlights(searchBox);
-        // get flights in bounding box
+        // Get flights in bounding box
+        ArrayList<State> states = getFlights(searchBox);
 
-        // search returned flights
-        
-        // build search output
+        /**
+         * SEARCH FOR PLANE THAT BEST FITS DEVICE ORIENTATION
+         * 
+         * Normalize state vectors to the bounding box coordinates
+         *      //Find conversion from lat and long to euclidean coordinates
+         *      Convert longitude and latitude to meters
+         *      Use WGS-84 altitude of device and geometric altitude of plane
+         * Create rotation vector that describes device orientation
+         *      Begin with unit vector
+         *      Rotate in x axis according to Azimuth     
+         *      Rotate in y axis according to heading
+         * Create rotation vectors that describe direction from device to each plane
+         * Identify vector(s) closest to device orientation vector
+         * Return info
+         */
 
         return new SearchOutput();
     }
@@ -42,7 +55,7 @@ public class SearchUtils {
         return new BoundingBox(loMin, laMin, loMax, laMax);
     }
 
-    private static State[] getFlights(BoundingBox searchBox) {
+    private static ArrayList<State> getFlights(BoundingBox searchBox) {
 
         // Build the request uri. Hard coding it like I did below is not a good solution.
         double laMin = searchBox.laMin();
@@ -63,7 +76,7 @@ public class SearchUtils {
     /*
      * Reference: https://www.baeldung.com/jackson-object-mapper-tutorial
      */
-    private static State[] parseResponse(String response) {
+    private static ArrayList<State> parseResponse(String response) {
 
         ObjectMapper mapper = new ObjectMapper();
         SimpleModule module = new SimpleModule("FlightStateDeserializer", new Version(1, 0, 0, null, null, null));
@@ -75,10 +88,9 @@ public class SearchUtils {
             JsonNode responseNode = mapper.readTree(response).get("states");
             String newResponse = mapper.writeValueAsString(responseNode);
             //ArrayList<ArrayList<Object>> resp = mapper.readValue(response, StateResponse.class).states();
-            ArrayList<State> states = mapper.readValue(newResponse, new TypeReference<ArrayList<State>>(){});
-            return null;
+            return mapper.readValue(newResponse, new TypeReference<ArrayList<State>>(){});
         } catch (Exception e) {
-            return null;
+            return new ArrayList<State>();
         }
     }
 }
