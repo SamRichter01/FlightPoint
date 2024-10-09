@@ -13,9 +13,9 @@ import org.springframework.web.client.RestClient;
 
 public class SearchUtils {
 
-    public static SearchOutput search(double hdng, double azmth, double lat, double lng, double alt) {
+    public static SearchOutput search(double brng, double azmth, double lat, double lng, double alt) {
         // Get bounding box
-        BoundingBox searchBox = defineBoundingBox(hdng, azmth, lat, lng);
+        BoundingBox searchBox = defineBoundingBox(brng, azmth, lat, lng);
 
         // Get flights in bounding box
         ArrayList<State> states = getFlights(searchBox);
@@ -34,14 +34,16 @@ public class SearchUtils {
          */
         ArrayList<SearchablePlaneState> searchableList = new ArrayList<SearchablePlaneState>();
         for (State state : states) {
-            SearchablePlaneState item = new SearchablePlaneState(state, lat, lng, alt);
+            SearchablePlaneState item = new SearchablePlaneState(state, lat, lng, alt, brng);
             searchableList.add(item);
         }
+
+        searchableList.sort(null);
         
         return new SearchOutput();
     }
 
-    private static BoundingBox defineBoundingBox(double hdng, double azmth, double lat, double lng) {
+    private static BoundingBox defineBoundingBox(double brng, double azmth, double lat, double lng) {
         /*
          * Create bounding box from device coordinates, azimuth, and heading.
          * For now I'm gonna calculate a default bounding box 2deg (~100mi) square centered on Minneapolis
@@ -98,16 +100,19 @@ public class SearchUtils {
     private static class SearchablePlaneState {
         private State state;
         private double[] planeCoords;
+        private double deviceBrng;
         private double alt;
         private double brng;
+        private double brngDiff;
         private double azmth;
 
-        public SearchablePlaneState(State state, double lat, double lng, double alt) {
+        public SearchablePlaneState(State state, double lat, double lng, double alt, double deviceBrng) {
             this.state = state;
             this.planeCoords = new double[2];
             this.planeCoords[0] = state.getLatitude() - lat;
             this.planeCoords[1] = state.getLongitude() - lng;
             this.alt = state.getGeoAltitude();
+            this.deviceBrng = deviceBrng;
             this.brng = calculateBearing();
             this.azmth = calculateAzimuth();
         }
@@ -127,6 +132,10 @@ public class SearchUtils {
             double theta = Math.atan2(y, x);
             double brng = (theta * 180/Math.PI + 360) % 360; //In degrees.
             return brng;
+        }
+
+        private double calculateBearingDiff() {
+            //if ()
         }
 
         // Calculate the azimuth to the plane from the device.

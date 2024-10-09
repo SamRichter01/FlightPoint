@@ -16,8 +16,8 @@ public class FlightSearchController {
         
         //Extract data directly from searchInput object.
         //double deviceHeading = searchInput.deviceHeading();
-        //double deviceLat = searchInput.deviceLat();
-        //double deviceLng = searchInput.deviceLng();
+        double deviceLat = searchInput.deviceLat();
+        double deviceLng = searchInput.deviceLng();
         //double deviceAzimuth = searchInput.deviceAzimuth();
         //double deviceAlt = searchInpit.deviceAlt();
 
@@ -25,7 +25,7 @@ public class FlightSearchController {
         //lat = 44.9778;
         //lng = -93.2650;
 
-        SearchUtils.search(0, 0, 44.9778, -93.2650, 0);
+        SearchUtils.search(0, 0, deviceLat, deviceLng, 0);
     
         return new SearchOutput();
     }
