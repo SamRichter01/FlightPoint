@@ -1,10 +1,9 @@
 package com.flightpoint.service;
 
-import org.springframework.web.util.UriUtils;
+//import org.springframework.web.util.UriUtils;
 
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -21,22 +20,24 @@ public class SearchUtils {
         // Get flights in bounding box
         ArrayList<State> states = getFlights(searchBox);
 
-        /**
+         /**
          * SEARCH FOR PLANE THAT BEST FITS DEVICE ORIENTATION
          * 
-         * Normalize state vectors to the bounding box coordinates
-         *      //Find conversion from lat and long to euclidean coordinates
-         *      Convert longitude and latitude to meters
-         *      Use WGS-84 altitude of device and geometric altitude of plane
-         * Create rotation vector that describes device orientation
-         *      Begin with unit vector
-         *      Rotate in x axis according to Azimuth     
-         *      Rotate in y axis according to heading
-         * Create rotation vectors that describe direction from device to each plane
-         * Identify vector(s) closest to device orientation vector
-         * Return info
+         * 1. Normalize plane coordinates to center on the device at 0, 0
+         * Calculate bearing to each plane from the device
+         * Find plane(s) with bearing closest to device bearing
+         * 
+         * If multiple planes within a margin of error:
+         *      Get distances from planes to device in an absolute straight line
+         *      Get altitudes of planes
+         *      Find the plane whose angle most closely matches the device azimuth
          */
-
+        ArrayList<SearchablePlaneState> searchableList = new ArrayList<SearchablePlaneState>();
+        for (State state : states) {
+            SearchablePlaneState item = new SearchablePlaneState(state, lat, lng, alt);
+            searchableList.add(item);
+        }
+        
         return new SearchOutput();
     }
 
@@ -44,7 +45,7 @@ public class SearchUtils {
         /*
          * Create bounding box from device coordinates, azimuth, and heading.
          * For now I'm gonna calculate a default bounding box 2deg (~100mi) square centered on Minneapolis
-         * 44.9778° N, 93.2650° W
+         * 44.9778°, -93.2650°
          */
 
         double laMin = lat - 1;
@@ -91,6 +92,54 @@ public class SearchUtils {
             return mapper.readValue(newResponse, new TypeReference<ArrayList<State>>(){});
         } catch (Exception e) {
             return new ArrayList<State>();
+        }
+    }
+
+    private static class SearchablePlaneState {
+        private State state;
+        private double[] planeCoords;
+        private double alt;
+        private double brng;
+        private double azmth;
+
+        public SearchablePlaneState(State state, double lat, double lng, double alt) {
+            this.state = state;
+            this.planeCoords = new double[2];
+            this.planeCoords[0] = state.getLatitude() - lat;
+            this.planeCoords[1] = state.getLongitude() - lng;
+            this.alt = state.getGeoAltitude();
+            this.brng = calculateBearing();
+            this.azmth = calculateAzimuth();
+        }
+
+        // Based on the algorithms laid out at: https://www.movable-type.co.uk/scripts/latlong.html
+        // θ = atan2( sin Δλ ⋅ cos φ2 , cos φ1 ⋅ sin φ2 − sin φ1 ⋅ cos φ2 ⋅ cos Δλ )
+        // where:	φ1,λ1 is the start point, φ2,λ2 the end point (Δλ is the difference in longitude)
+        private double calculateBearing() {
+            double planeLat = planeCoords[0];
+            double planeLng = planeCoords[1];
+            // Because the plane's coordinates are normalized, both of these values can be zero.
+            double deviceLat = 0;
+            double deviceLng = 0;
+            double y = Math.sin(planeLng - deviceLng) * Math.cos(deviceLat);
+            double x = Math.cos(deviceLat) * Math.sin(planeLat) - 
+                Math.sin(deviceLat) * Math.cos(planeLat) * Math.cos(planeLng - deviceLng);
+            double theta = Math.atan2(y, x);
+            double brng = (theta * 180/Math.PI + 360) % 360; //In degrees.
+            return brng;
+        }
+
+        // Calculate the azimuth to the plane from the device.
+        private double calculateAzimuth() {
+            return 0;
+        }
+
+        public double getBearing() {
+            return this.brng;
+        }
+
+        public double getAzimuth() {
+            return this.azmth;
         }
     }
 }
