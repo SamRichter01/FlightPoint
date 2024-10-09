@@ -15,12 +15,16 @@ public class FlightSearchController {
     public SearchOutput flightSearch(@RequestBody SearchInput searchInput) {
         
         //Extract data directly from searchInput object.
-        double deviceHeading = searchInput.deviceHeading();
-        double deviceLat = searchInput.deviceLat();
-        double deviceLng = searchInput.deviceLng();
-        double deviceAzimuth = searchInput.deviceAzimuth();
+        //double deviceHeading = searchInput.deviceHeading();
+        //double deviceLat = searchInput.deviceLat();
+        //double deviceLng = searchInput.deviceLng();
+        //double deviceAzimuth = searchInput.deviceAzimuth();
 
         //SearchOutput searchOutput = SearchUtils.search(deviceLat, deviceLng, deviceHeading);
+        //lat = 44.9778;
+        //lng = -93.2650;
+
+        SearchUtils.search(0, 0, 44.9778, -93.2650);
     
         return new SearchOutput();
     }

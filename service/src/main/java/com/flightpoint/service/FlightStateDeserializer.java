@@ -5,6 +5,9 @@ import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.node.*;
+import java.util.Iterator;
+import java.lang.reflect.Field;
 
 /**
  * Custom JSON serializer for the jackson library.
@@ -20,55 +23,68 @@ public class FlightStateDeserializer extends StdDeserializer<State> {
         super(t);
     }
 
+    /**
+     * This is the ugliest piece of code I have ever written.
+     */
     @Override 
     public State deserialize(JsonParser parser, DeserializationContext deserializer) {
         ObjectCodec codec = parser.getCodec();
-        State state = new State();
 
+        // Parsing the array and assigning the values to State objects
+        // Used this answer here: https://stackoverflow.com/questions/48642450/how-to-iterate-all-subnodes-of-a-json-object
+        // and this one for hash maps: https://stackoverflow.com/questions/24094871/set-field-value-with-reflection
         try {
+            //Get the current json node tree from the response.
             JsonNode node = codec.readTree(parser);
 
-            JsonNode originCountryNode = node.get("origin_country");
-            String originCountry = originCountryNode.asText();
-            state.setOriginCountry(originCountry);
+            //Get the fields of the State class with Reflect so that we can assign things to them.
+            Field[] fields = State.class.getFields();
 
-            JsonNode timePositionNode = node.get("time_position");
-            int timePosition = timePositionNode.asInt();
-            state.setTimePosition(timePosition);
-
-            JsonNode lastContactNode = node.get("last_contact");
-            int lastContact = lastContactNode.asInt();
-            state.setLastContact(lastContact);
-
-            JsonNode baroAltitudeNode = node.get("baro_altitude");
-            double baroAltitude = baroAltitudeNode.asDouble();
-            state.setBaroAltitude(baroAltitude);
-
-            JsonNode onGroundNode = node.get("on_ground");
-            boolean onGround = onGroundNode.asBoolean();
-            state.setOnGround(onGround);
-
-            JsonNode trueTrackNode = node.get("true_track");
-            double trueTrack = trueTrackNode.asDouble();
-            state.setTrueTrack(trueTrack);
-
-            JsonNode verticalRateNode = node.get("vertical_rate");
-            double verticalRate = verticalRateNode.asDouble();
-            state.setVerticalRate(verticalRate);
-
-            JsonNode geoAltitudeNode = node.get("geo_altitude");
-            double geoAltitude = geoAltitudeNode.asDouble();
-            state.setGeoAltitude(geoAltitude);
-
-            JsonNode positionSourceNode = node.get("position_source");
-            int positionSource = positionSourceNode.asInt();
-            state.setPositionSource(positionSource);
+            int counter = 0;
+            State state = new State("", "", "", 0, 0, 0, 0, 0, false, 0, 0, 0, new int[0], 0, "", false, 0, 0);
+        
+            if (node.isArray()) {
+                ArrayNode arrayNode = (ArrayNode) node;
+                Iterator<JsonNode> iterator = arrayNode.elements();
+                while (iterator.hasNext()) {
+                    JsonNode val = iterator.next();
+                    //Check the class name agianst some hardcoded ones, change the output based on that.
+                    switch (val.getClass().getName()) {
+                        case nodeNames.TEXTNODE: 
+                            fields[counter].set(state, val.asText());
+                            break;
+                        case nodeNames.BOOLEANNODE:
+                            fields[counter].set(state, val.asBoolean());
+                            break;
+                        case nodeNames.DOUBLENODE:
+                            fields[counter].set(state, val.asDouble());
+                            break;
+                        case nodeNames.INTNODE:
+                            fields[counter].set(state, val.asInt());
+                            break;
+                        case nodeNames.NULLNODE:
+                            fields[counter].set(state, null);
+                            break;
+                        default:
+                            fields[counter].set(state, null);
+                            break;
+                    }
+                    counter ++;
+                }
+            }
 
             return state;
         } catch (Exception e) {
             System.out.println("Reading parser tree failed");
             return null;
         }
+    }
 
+    private static class nodeNames {
+        static final String TEXTNODE = "com.fasterxml.jackson.databind.node.TextNode";
+        static final String BOOLEANNODE = "com.fasterxml.jackson.databind.node.BooleanNode";
+        static final String INTNODE = "com.fasterxml.jackson.databind.node.IntNode";
+        static final String DOUBLENODE = "com.fasterxml.jackson.databind.node.DoubleNode";
+        static final String NULLNODE = "com.fasterxml.jackson.databind.node.NullNode";
     }
 }

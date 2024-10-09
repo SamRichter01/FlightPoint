@@ -1,26 +1,45 @@
 package com.flightpoint.service;
 
 public class State {
-    private String icao24;
-    private String callsign;
-    private String originCountry;
-    private int timePosition;
-    private int lastContact;
-    private double longitude;
-    private double latitude;
-    private double baroAltitude;
-    private boolean onGround;
-    private double velocity;
-    private double trueTrack;
-    private double verticalRate;
-    private int[] sensors;
-    private double geoAltitude;
-    private String squawk;
-    private boolean spi;
-    private int positionSource;
-    private int category;
+    public String icao24;
+    public String callsign;
+    public String originCountry;
+    public int timePosition;
+    public int lastContact;
+    public double longitude;
+    public double latitude;
+    public double baroAltitude;
+    public boolean onGround;
+    public double velocity;
+    public double trueTrack;
+    public double verticalRate;
+    public int[] sensors;
+    public double geoAltitude;
+    public String squawk;
+    public boolean spi;
+    public int positionSource;
+    public int category;
 
     public State() { }
+
+    public State( String icao24,
+     String callsign,
+     String originCountry,
+     int timePosition,
+     int lastContact,
+     double longitude,
+     double latitude,
+     double baroAltitude,
+     boolean onGround,
+     double velocity,
+     double trueTrack,
+     double verticalRate,
+     int[] sensors,
+     double geoAltitude,
+     String squawk,
+     boolean spi,
+     int positionSource,
+     int category) {}
 
 
     public String getIcao24() {
