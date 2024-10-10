@@ -16,7 +16,7 @@ import org.springframework.web.client.RestClient;
 
 public class SearchUtils {
 
-    public static SearchOutput search(double brng, double azmth, double lat, double lng, double alt) {
+    public static State search(double brng, double azmth, double lat, double lng, double alt) {
         // Get bounding box
         BoundingBox searchBox = defineBoundingBox(brng, azmth, lat, lng);
 
@@ -37,13 +37,13 @@ public class SearchUtils {
          */
         ArrayList<SearchablePlaneState> searchableList = new ArrayList<SearchablePlaneState>();
         for (State state : states) {
-            SearchablePlaneState item = new SearchablePlaneState(state, lat, lng, alt, brng);
+            SearchablePlaneState item = new SearchablePlaneState(state, lat, lng, alt, brng, azmth);
             searchableList.add(item);
         }
 
         Collections.sort(searchableList);
         
-        return new SearchOutput();
+        return searchableList.get(0).getState();
     }
 
     private static BoundingBox defineBoundingBox(double brng, double azmth, double lat, double lng) {
@@ -73,6 +73,7 @@ public class SearchUtils {
         RestClient client = RestClient.create();
         String response = client.get()
             .uri("https://opensky-network.org/api/states/all?lamin={laMin}&lomin={loMin}&lamax={laMax}&lomax={loMax}", laMin, loMin, laMax, loMax)
+            .headers(httpHeaders -> {httpHeaders.setBasicAuth("samrich9169", "sam9169rich");})
             .retrieve()
             .body(String.class);
 
@@ -110,33 +111,51 @@ public class SearchUtils {
         private double planeAlt;
         private double planeBrng;
         private double brngDiff;
-        private double azmth;
+        private double planeAzmth;
+        private double deviceAzmth;
+        private double azmthDiff;
 
-        public SearchablePlaneState(State state, double lat, double lng, double alt, double deviceBrng) {
+        public SearchablePlaneState(State state, double lat, double lng, double alt, double deviceBrng, double deviceAzmth) {
             if(state!=null) {
                 this.state = state;
+
                 this.normalPlaneCoords[0] = state.getLatitude() - lat;
                 this.normalPlaneCoords[1] = state.getLongitude() - lng;
+
                 this.planeCoords[0] = state.getLatitude();
                 this.planeCoords[1] = state.getLongitude();
+
                 this.deviceCoords[0] = lat;
                 this.deviceCoords[1] = lng;
+
                 this.planeAlt = state.getGeoAltitude();
                 this.deviceAlt = alt;
+
                 this.deviceBrng = deviceBrng;
                 this.planeBrng = calculateBearing();
                 this.brngDiff = calculateBearingDiff();
-                this.azmth = calculateAzimuth();
+                
+                this.deviceAzmth = deviceAzmth;
+                this.planeAzmth = calculateAzimuth();
+                this.azmthDiff = calculateAzimuthDiff();
+  
             } 
         }
 
         @Override
         public int compareTo(SearchablePlaneState o) {
-            if (this.brngDiff > o.getBearingDiff()) {
+            if (this.brngDiff > o.getBearingDiff() + 0.1) {
                 return 1;
-            } else if (this.brngDiff < o.getBearingDiff()) {
+            } else if (this.brngDiff < o.getBearingDiff() - 0.1) {
                 return -1;
             } else {
+                /*
+                if (this.azmthDiff > o.getAzimuthDiff()) {
+                    return 1;
+                } else if (this.brngDiff < o.getAzimuthDiff()) {
+                    return -1;
+                } 
+                */
                 return 0;
             }
         }
@@ -161,6 +180,11 @@ public class SearchUtils {
         // Calculate difference between the device and plane bearings so it's easier to sort the planes
         private double calculateBearingDiff() {
             return Math.min((Math.abs(planeBrng - deviceBrng)), 360 - Math.abs(planeBrng - deviceBrng));
+        }
+
+        // Calculate the difference between the device and plane azimuth for sorting.
+        private double calculateAzimuthDiff() {
+            return Math.abs(deviceAzmth - planeAzmth);
         }
 
         // Calculate the azimuth to the plane from the device.
@@ -246,8 +270,12 @@ public class SearchUtils {
             return this.brngDiff;
         }
 
+        public double getAzimuthDiff() {
+            return this.azmthDiff;
+        }
+
         public double getAzimuth() {
-            return this.azmth;
+            return this.planeAzmth;
         }
     }
 }

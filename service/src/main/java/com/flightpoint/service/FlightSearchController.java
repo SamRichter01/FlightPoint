@@ -12,21 +12,19 @@ public class FlightSearchController {
     //private final AtomicLong counter = new AtomicLong();
 
     @PostMapping(path="/flightsearch", consumes="application/json", produces="application/json")
-    public SearchOutput flightSearch(@RequestBody SearchInput searchInput) {
+    public State flightSearch(@RequestBody SearchInput searchInput) {
         
         //Extract data directly from searchInput object.
-        //double deviceHeading = searchInput.deviceHeading();
+        double deviceHeading = searchInput.deviceHeading();
         double deviceLat = searchInput.deviceLat();
         double deviceLng = searchInput.deviceLng();
-        //double deviceAzimuth = searchInput.deviceAzimuth();
-        //double deviceAlt = searchInpit.deviceAlt();
+        double deviceAzimuth = searchInput.deviceAzimuth();
+        double deviceAlt = searchInput.deviceAlt();
 
         //SearchOutput searchOutput = SearchUtils.search(deviceLat, deviceLng, deviceHeading);
         //lat = 44.9778;
         //lng = -93.2650;
 
-        SearchUtils.search(0, 0, deviceLat, deviceLng, 252.984);
-    
-        return new SearchOutput();
+        return SearchUtils.search(deviceHeading, deviceAzimuth, deviceLat, deviceLng, deviceAlt);
     }
 }

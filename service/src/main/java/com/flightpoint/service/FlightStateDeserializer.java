@@ -53,22 +53,38 @@ public class FlightStateDeserializer extends StdDeserializer<State> {
                     //Check the class name agianst some hardcoded ones, change the output based on that.
                     switch (val.getClass().getName()) {
                         case nodeNames.TEXTNODE: 
-                            fields[counter].set(state, val.asText());
+                            if (val.asText().equals(null)) {
+                                fields[counter].set(state, "");
+                            } else {
+                                fields[counter].set(state, val.asText());
+                            }
                             break;
                         case nodeNames.BOOLEANNODE:
-                            fields[counter].set(state, val.asBoolean());
+                            if (val.asText().equals(null)) {
+                                fields[counter].set(state, false);
+                            } else {
+                                fields[counter].set(state, val.asBoolean());
+                            }
                             break;
                         case nodeNames.DOUBLENODE:
-                            fields[counter].set(state, val.asDouble());
+                            if (val.asText().equals(null)) {
+                                fields[counter].set(state, 0);
+                            } else {
+                                fields[counter].set(state, val.asDouble());
+                            }
                             break;
                         case nodeNames.INTNODE:
-                            fields[counter].set(state, val.asInt());
+                            if (val.asText().equals(null)) {
+                                fields[counter].set(state, 0);
+                            } else {
+                                fields[counter].set(state, val.asInt());
+                            }
                             break;
                         case nodeNames.NULLNODE:
-                            fields[counter].set(state, null);
+                            //fields[counter].set(state, null);
                             break;
                         default:
-                            fields[counter].set(state, null);
+                            //fields[counter].set(state, null);
                             break;
                     }
                     counter ++;
