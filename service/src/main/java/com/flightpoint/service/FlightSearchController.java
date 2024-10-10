@@ -25,7 +25,7 @@ public class FlightSearchController {
         //lat = 44.9778;
         //lng = -93.2650;
 
-        SearchUtils.search(0, 0, deviceLat, deviceLng, 0);
+        SearchUtils.search(0, 0, deviceLat, deviceLng, 252.984);
     
         return new SearchOutput();
     }
